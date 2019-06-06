@@ -3,8 +3,22 @@ import * as mongoose from 'mongoose'
 import { NotFoundError } from 'restify-errors'
 
 export abstract class ModelRouter<D extends mongoose.Document> extends Router {
+    
+    basePath: string
+    
     constructor(protected model: mongoose.Model<D>) {
         super()
+        this.basePath = `/${model.collection.name}`
+    }
+
+    protected prepareOne(query: mongoose.DocumentQuery<D,D>): mongoose.DocumentQuery<D,D> {
+        return query
+    }
+
+    envelope(document: any): any {
+        let resouce = Object.assign({_links:{}}, document.toJSON())
+        resouce._links.self = `${this.basePath}/${resouce._id}`
+        return resouce
     }
 
     validateId = (req, resp, next) => {
@@ -22,7 +36,7 @@ export abstract class ModelRouter<D extends mongoose.Document> extends Router {
     }
 
     findById = (req, resp, next) => {
-        this.model.findById(req.params.id)
+        this.prepareOne(this.model.findById(req.params.id))
             .then(this.render(resp, next))
             .catch(next)
     }
