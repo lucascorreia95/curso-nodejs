@@ -6,6 +6,9 @@ class Router extends events_1.EventEmitter {
     envelope(document) {
         return document;
     }
+    envelopeAll(documents, options = {}) {
+        return documents;
+    }
     render(response, next) {
         return (document) => {
             if (document) {
@@ -15,22 +18,22 @@ class Router extends events_1.EventEmitter {
             else {
                 throw new restify_errors_1.NotFoundError('Documento nao encontrado');
             }
-            return next();
+            return next(false);
         };
     }
-    renderAll(response, next) {
+    renderAll(response, next, options = {}) {
         return (documents) => {
             if (documents) {
                 documents.forEach((document, index, array) => {
                     this.emit('beforeRender', document);
                     array[index] = this.envelope(document);
                 });
-                response.json(documents);
+                response.json(this.envelopeAll(documents, options));
             }
             else {
-                response.json([]);
+                response.json(this.envelopeAll([]));
             }
-            return next();
+            return next(false);
         };
     }
 }
